@@ -1,4 +1,4 @@
-"""순수 함수 테스트: jobs.classify / format_elapsed, launch._argv, win_find.place_geometry.
+"""순수 함수 테스트: jobs.classify / format_elapsed, launch._argv.
 psutil도 Popen도 부르지 않는다(sys.path는 conftest.py가 잡는다)."""
 import os
 
@@ -10,8 +10,6 @@ import launch
 
 # Windows 경로(C:\dev …)·wt·Win32를 전제한 표다. 맥·리눅스 쪽은 test_posix.py가 본다.
 pytestmark = pytest.mark.skipif(not config.IS_WIN, reason="Windows 전용")
-if config.IS_WIN:
-    import win_find
 
 PROJECTS = ["potts-annealer", "myproj", "dev-dashboard", jobs.ROOT_KEY]
 NOW = 1_000_000.0
@@ -134,24 +132,3 @@ def test_powershell_button_has_no_command(mode, request):
     argv = launch._argv(PROJ, None)
     assert "-Command" not in argv
     assert argv[-2:] == ["-NoLogo", "-NoExit"]
-
-
-# ── win_find.place_geometry ─────────────────────────────────────────────────
-RECTS = [(0, 0, 2560, 1440), (-2560, 0, 0, 1440)]
-
-
-@pytest.fixture
-def screens(monkeypatch):
-    monkeypatch.setattr(win_find, "monitor_rects", lambda: list(RECTS))
-
-
-def test_geometry_keeps_secondary_monitor(screens):
-    assert win_find.place_geometry((-2560, 100, 1000, 700), (800, 600)) == "1000x700+-2560+100"
-
-
-def test_geometry_offscreen_centers_on_primary(screens):
-    assert win_find.place_geometry((9999, 9999, 1000, 700), (800, 600)) == "1000x700+780+370"
-
-
-def test_geometry_none_centers_on_primary(screens):
-    assert win_find.place_geometry(None, (1000, 700)) == "1000x700+780+370"

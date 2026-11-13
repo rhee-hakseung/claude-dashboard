@@ -127,18 +127,6 @@ def primary_rect():
     return rects[0] if rects else (0, 0, 1920, 1080)
 
 
-def place_geometry(saved, default_wh):
-    """저장된 (x, y, w, h)가 어느 모니터와든 100×100 px 이상 겹치면 그대로, 아니면 주 모니터 중앙."""
-    w, h = (saved[2], saved[3]) if saved else default_wh
-    if saved and _visible_enough(saved[0], saved[1], w, h):
-        x, y = saved[0], saved[1]
-    else:
-        pl, pt, pr, pb = primary_rect()
-        x, y = pl + ((pr - pl) - w) // 2, pt + ((pb - pt) - h) // 2
-    # 음수 x는 반드시 '+-2560' 꼴로 조립한다. '-2560'이면 Tk가 오른쪽 가장자리 기준으로 읽는다.
-    return "%dx%d+%d+%d" % (w, h, x, y)
-
-
 def _visible_enough(x, y, w, h):
     m = config.WINDOW_MIN_VISIBLE_PX
     for left, top, right, bottom in monitor_rects():

@@ -89,7 +89,7 @@ def test_prefs_round_trip_keeps_other_keys(state):
     p.save("favorites", "folded", "theme")
     q = prefs.Prefs()
     assert (q.favorites, q.folded, q.theme) == (["a", "b"], {"alpha"}, "dark")
-    assert prefs.load_geometry() == [1, 2, 3, 4]
+    assert prefs.read_state()["geometry"] == [1, 2, 3, 4]
 
 
 def hub_with(s):

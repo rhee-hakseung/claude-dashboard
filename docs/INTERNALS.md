@@ -41,7 +41,6 @@ macOS에서 Claude Code 레지스트리의 `procStart` 형식을 알 수 없어,
 - **테마**: 오른쪽 위 버튼으로 밝게/어둡게(`"theme"`에 저장, 없으면 Windows 설정을 따른다).
 - 창 자리는 닫을 때 `"window"`(실제 픽셀)로 저장한다. 최소화·최대화 상태에서는 저장하지 않는다.
 
-예전 tkinter 화면은 예비로 남아 있다: `pythonw.exe -B app.py --classic`.
 화면을 창 없이 확인하려면 뷰 JSON을 `window.MOCK_VIEW = {...};`로 저장한 js 파일을 만들어
 `web\index.html?mock=<그 파일의 file:// 주소>`를 Edge 헤드리스(`--headless=new --screenshot=…`)로 찍는다.
 
@@ -96,6 +95,8 @@ Store 별칭 스텁이라 "Python was not found"로 조용히 실패한다. 런�
 
 ## 파일
 
+`app.py`와 설치 스크립트를 뺀 파이썬 모듈은 전부 `dashboard/` 폴더에 있다(2026-11-13 정리: 예전 tkinter 화면 `ui_*.py`와 `--classic`은 없앴다).
+
 | 파일 | 하는 일 |
 |---|---|
 | `config.py` | 모든 상수 — 경로, 폴링 주기, 판정 임계, 화면 문구 |
@@ -117,17 +118,12 @@ Store 별칭 스텁이라 "Python was not found"로 조용히 실패한다. 런�
 | `trash.py` | [휴지통] — 3중 가드 뒤 send2trash |
 | `workers.py` | 수집 스레드 2개(fast 0.5 s / slow 데드라인 루프)와 공유 스냅샷 |
 | `live.py` | 라이브 세션 조립 — 레지스트리 → 꼬리 캐시 → D1 판정 → [점프] 가능 판정 |
-| `ui_shell.py` | 창 껍데기 — 스크롤 Canvas, 상태줄, `state.json`(창 위치·별칭·순서) 읽기/병합 저장 |
-| `ui_rows.py` | 라이브·끝남·작업 행의 배치와 나이 문자열 제자리 갱신 |
-| `ui_project.py` | 프로젝트 머리 줄(끌기 손잡이 ≡·접기·이름·버튼, 기다림 빨간 점)과 이름(별칭) 더블클릭 제자리 편집 |
-| `ui_order.py` | 프로젝트 순서 — 손잡이 끌어 옮기기(표시줄·자동 스크롤·Esc 취소), 놓는 즉시 `state.json`의 `"order"`에 저장 |
-| `ui_actions.py` | 버튼 6종의 동작 — [점프]/[재개]/[새 claude]/[PowerShell]/[탐색기]/[휴지통] |
-| `app.py` | 진입점 — 기본은 새 화면(`webapp.main`), `--classic`이면 예전 tk 화면(셸 + 워커 + 100 ms UI 틱) |
+| `app.py` | 진입점(저장소 맨 위) — `dashboard/`를 임포트 경로에 넣고 `webapp.main`을 부른다 |
 | `webapp.py` | 새 화면의 창 — 위치·크기 복원/저장, 아이콘, 닫기 |
 | `web_hub.py` | 새 화면의 상태 — 수집 스레드 4개, 강조, 설정, 마지막 뷰(JSON)와 rev |
 | `web_view.py` | 스냅샷 → 화면에 보낼 뷰(dict) 조립(순수) |
 | `web_api.py` | 화면이 부르는 버튼 동작 — 점프/재개/휴지통/새 claude/순서/이름/접기/즐겨찾기/테마 |
-| `viewmodel.py` | 프로젝트별 묶기·상태줄·강조 적용(순수, 두 화면 공용) |
+| `viewmodel.py` | 프로젝트별 묶기·상태줄·강조 적용(순수) |
 | `prefs.py` | `state.json` 읽기/병합 저장과 설정 묶음(별칭·순서·접힘·즐겨찾기·테마) |
 | `stats.py` | 프로젝트 현황 수집 스레드 — git 상태, 폴더 용량, 활동 막대 |
 | `activity.py` | 활동 막대 계산 — transcript를 뒤에서부터 읽어 날짜별 레코드 수만 센다 |
@@ -138,8 +134,7 @@ Store 별칭 스텁이라 "Python was not found"로 조용히 실패한다. 런�
 
 - **새 화면의 모양을 바꾸려면** → `web\style.css`(색은 맨 위 토큰), **줄·카드 구성** → `web\render.js`,
   **버튼 동작** → `web_api.py`, **화면에 보낼 값** → `web_view.py`
-- (예전 tk 화면) **버튼의 동작** → `ui_actions.py`, **배치** → `ui_rows.py`
-- **프로젝트 순서 규칙을 바꾸려면** → `model.order_projects`(+ 끌기·저장은 `ui_order.py`)
+- **프로젝트 순서 규칙을 바꾸려면** → `model.order_projects`(+ 끌기는 `web/app.js`, 저장은 `web_api.reorder`)
 - **폴링 주기·판정 임계·문구를 바꾸려면** → `config.py` 한 파일
 - **상태 판정 규칙을 바꾸려면** → `status.py`(+ 꼬리 읽기는 `tail.py`)
 

@@ -1,7 +1,7 @@
 """state.json 읽기/쓰기와 사용자 설정(별칭·순서·접힘·즐겨찾기·테마). 화면 도구(tk·webview)를 모른다.
 
 쓰기는 언제나 읽고-합쳐서 원자적으로(.tmp → os.replace) 한다 — 다른 키를 지우지 않는다.
-`ui_shell`(예전 tk 화면)과 `webapp`(새 화면)이 같은 함수를 쓴다.
+화면 쪽(`webapp`·`web_hub`·`web_api`)이 쓴다.
 """
 from __future__ import annotations
 
@@ -19,15 +19,6 @@ def read_state():
     except (OSError, ValueError):
         return {}
     return data if isinstance(data, dict) else {}
-
-
-def load_geometry():
-    """state.json의 `[x, y, w, h]`. 없거나 깨졌으면 None → 주 모니터 중앙."""
-    try:
-        g = read_state()["geometry"]
-        return [int(v) for v in g] if len(g) == 4 else None
-    except (ValueError, TypeError, KeyError):
-        return None
 
 
 def load_aliases():

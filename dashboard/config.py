@@ -20,7 +20,7 @@ _LOCALAPPDATA = _env("LOCALAPPDATA", os.path.join(_HOME, "AppData", "Local"))
 _APPDATA = _env("APPDATA", os.path.join(_HOME, "AppData", "Roaming"))
 
 # ── 경로 ─────────────────────────────────────────────────────────────────────
-OWN_DIR = os.path.dirname(os.path.abspath(__file__))   # 자기 폴더 = 설치 위치(목록에서 숨김)
+OWN_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # 설치 위치 = 이 폴더의 부모(목록에서 숨김)
 CLAUDE_HOME = os.path.join(_HOME, ".claude")
 SESSIONS_DIR = os.path.join(CLAUDE_HOME, "sessions")   # 라이브 레지스트리 <pid>.json (읽기 전용)
 PROJECTS_DIR = os.path.join(CLAUDE_HOME, "projects")   # transcript <slug>\<sessionId>.jsonl

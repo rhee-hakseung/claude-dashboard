@@ -5,11 +5,13 @@ $ErrorActionPreference = "Stop"
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $stage = Join-Path $env:TEMP ("dd-build-" + [guid]::NewGuid().ToString("N"))
 $pkg = Join-Path $stage "dev-dashboard"
-New-Item -ItemType Directory -Force (Join-Path $pkg "tests"), (Join-Path $pkg "web") | Out-Null
+New-Item -ItemType Directory -Force (Join-Path $pkg "dashboard"), (Join-Path $pkg "tests"), (Join-Path $pkg "web"), (Join-Path $pkg "docs") | Out-Null
 try {
-    $top = @("*.py", "dashboard.ico", "requirements.txt", "README.md", "LICENSE",
+    $top = @("app.py", "dashboard.ico", "requirements.txt", "README.md", "LICENSE",
              "install.ps1", "install.cmd", "install.sh", "run-dashboard.ps1")
     foreach ($pat in $top) { Copy-Item (Join-Path $here $pat) $pkg }
+    Copy-Item (Join-Path $here "dashboard\*.py") (Join-Path $pkg "dashboard")
+    Copy-Item (Join-Path $here "docs\*") (Join-Path $pkg "docs")
     Copy-Item (Join-Path $here "tests\*.py") (Join-Path $pkg "tests")
     Copy-Item (Join-Path $here "web\*") (Join-Path $pkg "web")   # the web UI: html / css / js
     $dist = Join-Path $here "dist"

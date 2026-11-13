@@ -97,7 +97,7 @@ def list_ended(projects: list[str], live_ids: set[str],
                projects_dir: str = config.PROJECTS_DIR, cache: dict | None = None,
                dev_root: str = config.DEV_ROOT) -> tuple[list[EndedSession], int]:
     """→ `(끝난 세션 목록, 실패 수)`. `cache[path] = ((path, mtime, size), info)`로
-    5초 폴링이 바뀐 파일만 다시 읽게 한다. 나이 문자열은 화면(ui_rows)이 mtime으로 만든다."""
+    5초 폴링이 바뀐 파일만 다시 읽게 한다. 나이 문자열은 화면(web/render.js)이 mtime으로 만든다."""
     rows: list[EndedSession] = []
     failures, seen, cont_of = 0, set(), {}
     for path in glob.glob(os.path.join(projects_dir, "*", "*.jsonl")):

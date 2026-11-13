@@ -25,7 +25,7 @@ WT_WINDOW = "0"
 
 
 class LaunchFailed(OSError):
-    """런처 실패. OSError를 상속해 ui_rows의 기존 `except OSError` 하나로 상태줄에 나간다."""
+    """런처 실패. OSError를 상속해 web_api의 `except OSError` 하나로 상태줄에 나간다."""
 
 
 def resolve_host():

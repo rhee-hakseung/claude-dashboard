@@ -1,6 +1,6 @@
 """/rename 제목: 라이브 행 라벨(탭 제목 우선)과 끝난 기록의 custom-title 우선."""
 import inventory
-import ui_rows
+import web_view
 from model import LiveSession
 from test_inventory import DEV, PROJECTS, SID_A, make, user
 
@@ -11,19 +11,19 @@ def live(tab="Claude Code", name="dev-2e", sid="abcdef0123456789"):
 
 
 def test_live_label_prefers_tab_title_over_registry_name():
-    assert ui_rows.live_label(live(tab="세션 관리 도구")) == "세션 관리 도구"
+    assert web_view.live_label(live(tab="세션 관리 도구")) == "세션 관리 도구"
 
 
 def test_live_label_default_title_falls_back_to_registry_name():
-    assert ui_rows.live_label(live()) == "dev-2e"
+    assert web_view.live_label(live()) == "dev-2e"
 
 
 def test_live_label_default_title_without_name_keeps_default():
-    assert ui_rows.live_label(live(name="")) == "Claude Code"
+    assert web_view.live_label(live(name="")) == "Claude Code"
 
 
 def test_live_label_last_resort_is_session_prefix():
-    assert ui_rows.live_label(live(tab="", name="")) == "abcdef01"
+    assert web_view.live_label(live(tab="", name="")) == "abcdef01"
 
 
 def title_of(tmp_path, records):

@@ -111,7 +111,8 @@ Python이 없으면 먼저 `brew install python@3.13`으로 설치합니다.
 .venv/bin/python -m pip install pytest && .venv/bin/python -m pytest tests -q
 ```
 
-- 화면은 `web/`의 HTML/CSS/JS이고, `pywebview` 창에 띄웁니다. 수집과 버튼 동작은 Python입니다.
+- 파이썬 코드는 `dashboard/`에, 화면은 `web/`의 HTML/CSS/JS에 있습니다. 화면은 `pywebview` 창에 띄우고, 수집과 버튼 동작은 Python이 합니다.
+- 실행 파일은 맨 위의 `app.py`입니다(설치 스크립트가 만드는 아이콘이 이 파일을 실행합니다).
 - 파일별 역할, 상태 판정 규칙, [점프]의 동작 방식 같은 내부 기록은 [docs/INTERNALS.md](docs/INTERNALS.md)에 있습니다.
 - GitHub 없이 전달하려면 Windows에서 `build-zip.ps1`을 실행해 `dist\`에 zip을 만듭니다. 받는 쪽은 압축을 풀고 `install.cmd`를 실행합니다.
 

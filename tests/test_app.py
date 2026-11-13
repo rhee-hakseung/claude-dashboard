@@ -1,6 +1,6 @@
 """UI 층의 순수 함수 3개: 뷰모델 dedup, 상태줄 조립, 강조 FSM 적용.
-Tk 루트를 만들지 않는다 — app이 tkinter를 import 하는 것까지만 허용한다."""
-import app
+순수 함수만 본다(viewmodel 모듈을 app이라는 이름으로 부른다)."""
+import viewmodel as app
 from model import ENDED, WAITING, WORKING, EndedSession, LiveSession, Project, Snapshot
 
 SID = "aaaa-1111"
