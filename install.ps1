@@ -99,7 +99,7 @@ if (-not (Test-Path -LiteralPath $DevRoot -PathType Container)) {
     exit 1
 }
 $DevRoot = (Resolve-Path -LiteralPath $DevRoot).Path
-Push-Location $here
+Push-Location (Join-Path $here "dashboard")   # the Python modules live in the dashboard folder
 try {
     & $venvPy -B -c "import sys, prefs; prefs.save_state(dev_root=sys.argv[1])" $DevRoot
     if ($LASTEXITCODE -ne 0) { Write-Error "could not save the projects folder"; exit 1 }

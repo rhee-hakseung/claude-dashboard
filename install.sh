@@ -45,7 +45,7 @@ if [ ! -d "$dev_root" ]; then
     exit 1
 fi
 dev_root="$(cd "$dev_root" && pwd)"
-(cd "$here" && .venv/bin/python -B -c 'import sys, prefs; prefs.save_state(dev_root=sys.argv[1])' "$dev_root")
+(cd "$here/dashboard" && ../.venv/bin/python -B -c 'import sys, prefs; prefs.save_state(dev_root=sys.argv[1])' "$dev_root")
 echo "Projects folder: $dev_root"
 
 # 4) App bundle (macOS only): ~/Applications/Claude dashboard.app — open it from Launchpad/Spotlight/Dock
