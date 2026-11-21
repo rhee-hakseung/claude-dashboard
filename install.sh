@@ -1,6 +1,6 @@
 #!/bin/bash
 # Install Claude dashboard on macOS: venv + packages + projects folder + "Claude dashboard.app".
-# Run from the cloned folder:  ./install.sh            (or: bash install.sh ~/dev)
+# Run from the cloned folder:  ./install.sh            (or: bash install.sh ~/dev Ghostty)
 # Safe to run again: it reuses a working .venv, updates packages, and rewrites the app bundle.
 # On Linux it does the same except the app bundle (start with: .venv/bin/python app.py).
 set -euo pipefail
@@ -48,6 +48,31 @@ dev_root="$(cd "$dev_root" && pwd)"
 (cd "$here/dashboard" && ../.venv/bin/python -B -c 'import sys, prefs; prefs.save_state(dev_root=sys.argv[1])' "$dev_root")
 echo "Projects folder: $dev_root"
 
+# 3b) Terminal app for [new claude]/[resume]/[shell] (macOS only): Terminal | iTerm2 | Ghostty
+if [ "$(uname -s)" = "Darwin" ]; then
+    term_app="${2:-}"
+    if [ -z "$term_app" ]; then
+        # Default: what was saved before, else the terminal this script is running in.
+        saved="$(cd "$here/dashboard" && ../.venv/bin/python -B -c 'import prefs; print(prefs.read_state().get("terminal") or "")')"
+        case "${TERM_PROGRAM:-}" in
+            ghostty) guess="Ghostty" ;;
+            iTerm.app) guess="iTerm2" ;;
+            *) guess="Terminal" ;;
+        esac
+        default_term="${saved:-$guess}"
+        read -r -p "Terminal app (Terminal / iTerm2 / Ghostty) [$default_term]: " term_app || true
+        term_app="${term_app:-$default_term}"
+    fi
+    case "$(printf '%s' "$term_app" | tr '[:upper:]' '[:lower:]')" in
+        terminal) term_app="Terminal" ;;
+        iterm2|iterm) term_app="iTerm2" ;;
+        ghostty) term_app="Ghostty" ;;
+        *) echo "Unknown terminal app: $term_app (use Terminal, iTerm2 or Ghostty)"; exit 1 ;;
+    esac
+    (cd "$here/dashboard" && ../.venv/bin/python -B -c 'import sys, prefs; prefs.save_state(terminal=sys.argv[1])' "$term_app")
+    echo "Terminal app: $term_app"
+fi
+
 # 4) App bundle (macOS only): ~/Applications/Claude dashboard.app — open it from Launchpad/Spotlight/Dock
 if [ "$(uname -s)" = "Darwin" ]; then
     app="$HOME/Applications/Claude dashboard.app"
@@ -85,4 +110,4 @@ else
     echo ""
     echo "Done. Start it with:  $here/.venv/bin/python $here/app.py"
 fi
-echo "To change the projects folder later: run ./install.sh again."
+echo "To change the projects folder or the terminal app later: run ./install.sh again."

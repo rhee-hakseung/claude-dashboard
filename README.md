@@ -56,6 +56,7 @@ git clone https://github.com/rhee-hakseung/claude-dashboard.git ~/dev/claude-das
 cd ~/dev/claude-dashboard && ./install.sh
 ```
 
+설치 중에 프로젝트 폴더와 터미널 앱(Terminal, iTerm2, Ghostty)을 묻습니다. Ghostty나 iTerm2에서 실행하면 그 앱이 기본값으로 제시됩니다.
 설치가 끝나면 `~/Applications/Claude dashboard.app`이 생깁니다. Spotlight에서 열거나 Dock에 끌어 둡니다.
 Python이 없으면 먼저 `brew install python@3.13`으로 설치합니다.
 
@@ -66,6 +67,7 @@ Python이 없으면 먼저 `brew install python@3.13`으로 설치합니다.
 
 - **업데이트**: 받은 폴더에서 `git pull`을 한 뒤 설치 스크립트를 한 번 더 실행합니다. 다시 실행해도 안전합니다.
 - **프로젝트 폴더 바꾸기**: 설치 스크립트를 다시 실행해 새 폴더를 입력합니다.
+- **터미널 앱 바꾸기**(macOS): 설치 스크립트를 다시 실행해 Terminal, iTerm2, Ghostty 중 하나를 입력합니다. `./install.sh ~/dev Ghostty`처럼 한 번에 줄 수도 있습니다.
 - **삭제**: 받은 폴더와 바탕화면 아이콘(맥은 앱)을 지웁니다. 설정 파일은 아래 위치에 따로 있습니다.
 
 설정(창 위치, 표시 이름, 순서, 즐겨찾기, 테마)은 받은 폴더 밖에 저장되어 업데이트해도 유지됩니다.
@@ -79,9 +81,9 @@ Python이 없으면 먼저 `brew install python@3.13`으로 설치합니다.
 
 | | Windows | macOS |
 |---|---|---|
-| 새 탭이 열리는 곳 | 열려 있는 Windows Terminal 창의 새 탭. 열린 창이 없으면 새 창 | Terminal 새 창. iTerm2를 쓰려면 `state.json`에 `"terminal": "iTerm2"`를 넣습니다 |
-| [점프]가 되는 터미널 | Windows Terminal, PowerShell 콘솔 창 | Terminal, iTerm2 |
-| 처음 한 번 묻는 권한 | 없음 | "Terminal 제어 허용"(시스템 설정 › 개인정보 보호 및 보안 › 자동화) |
+| 새 탭이 열리는 곳 | 열려 있는 Windows Terminal 창의 새 탭. 열린 창이 없으면 새 창 | 설치할 때 고른 터미널 앱(Terminal, iTerm2, Ghostty). Terminal과 iTerm2는 새 창, Ghostty는 열려 있는 창의 새 탭(Ghostty 1.4 이상) |
+| [점프]가 되는 터미널 | Windows Terminal, PowerShell 콘솔 창 | Terminal, iTerm2, Ghostty |
+| 처음 한 번 묻는 권한 | 없음 | "Terminal(또는 고른 터미널 앱) 제어 허용"(시스템 설정 › 개인정보 보호 및 보안 › 자동화) |
 
 ## 알아 둘 점
 

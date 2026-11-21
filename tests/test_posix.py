@@ -77,6 +77,11 @@ def test_host_of_iterm(fake_tree):
     assert mac_term.host_of(1) == ("iTerm2", "/dev/ttys009")
 
 
+def test_host_of_ghostty(fake_tree):
+    fake_tree(FakeProc("claude", "/dev/ttys001", [FakeProc("zsh"), FakeProc("login"), FakeProc("ghostty")]))
+    assert mac_term.host_of(1) == ("Ghostty", "/dev/ttys001")
+
+
 @pytest.mark.parametrize("proc", [
     FakeProc("claude", None, [FakeProc("Terminal")]),                     # tty 없음(백그라운드)
     FakeProc("claude", "/dev/ttys1; rm", [FakeProc("Terminal")]),         # 이상한 tty
@@ -111,7 +116,7 @@ def test_jump_not_found_is_false(fake_tree, monkeypatch):
     assert mac_term.jump(1) is False
 
 
-@pytest.mark.parametrize("app", ["Terminal", "iTerm2", "Unknown"])
+@pytest.mark.parametrize("app", ["Terminal", "iTerm2", "Ghostty", "Unknown"])
 def test_open_terminal_argv(monkeypatch, app):
     seen = []
     monkeypatch.setattr(mac_term.config, "MAC_TERMINAL", app)
@@ -119,7 +124,7 @@ def test_open_terminal_argv(monkeypatch, app):
     mac_term.open_terminal("/p q", "claude", env={})
     argv = seen[0]
     assert argv[0] == "osascript" and argv[-1] == "cd '/p q' && claude"
-    assert ('"iTerm2"' if app == "iTerm2" else '"Terminal"') in argv[2]
+    assert ('"%s"' % app if app in ("iTerm2", "Ghostty") else '"Terminal"') in argv[2]
 
 
 # ── launch의 맥 분기 ────────────────────────────────────────────────────────

@@ -113,7 +113,7 @@ POWERSHELL_EXE = os.path.join(_env("SystemRoot", r"C:\Windows"),
                               "System32", "WindowsPowerShell", "v1.0", "powershell.exe")
 EXPLORER_EXE = os.path.join(_env("SystemRoot", r"C:\Windows"), "explorer.exe")
 CLAUDE_CMD = "claude"          # 새 셸의 PATH로 해소한다(사용자 셸과 같은 claude)
-MAC_TERMINAL = _saved("terminal") or "Terminal"   # 맥에서 새 창을 열 앱: "Terminal" | "iTerm2"
+MAC_TERMINAL = _saved("terminal") or "Terminal"   # 맥에서 새 창을 열 앱: "Terminal" | "iTerm2" | "Ghostty"
 RESUMING_CAP_SEC = 120         # [재개] 마크 상한: 레지스트리에 안 나타나면 이 뒤 '끝남'으로 복귀
 JUMP_POSTCHECK_MS = 200        # [점프] 사후 확인 지연
 

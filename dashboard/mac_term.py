@@ -1,8 +1,9 @@
 """macOS의 창 다루기: 새 터미널 창 열기, [점프](claude가 도는 탭 찾아 앞으로), 창 자리 검사.
 
-[점프]는 claude 프로세스의 tty(`/dev/ttys003` 꼴)를 Terminal·iTerm2의 탭 tty와 대조한다 — 탭 제목은
+[점프]는 claude 프로세스의 tty(`/dev/ttys003` 꼴)를 Terminal·iTerm2·Ghostty의 탭 tty와 대조한다 — 탭 제목은
 보지 않는다. 처음 한 번 macOS가 "Terminal을 제어하도록 허용" 여부를 묻는다(시스템 설정 → 개인정보
-보호 및 보안 → 자동화). 다른 터미널(VS Code, Ghostty, Warp, tmux 안 …)의 세션은 [점프]가 꺼진다.
+보호 및 보안 → 자동화). 다른 터미널(VS Code, Warp, tmux 안 …)의 세션은 [점프]가 꺼진다.
+Ghostty는 AppleScript를 지원하는 1.4 이상이어야 한다(1.4.0에서 확인).
 AppleScript에는 값을 문자열로 끼우지 않고 `on run argv` 인자로 넘긴다(따옴표 이스케이프 문제가 없다).
 """
 from __future__ import annotations
@@ -17,7 +18,7 @@ import psutil
 import config
 
 log = logging.getLogger("dev-dashboard")
-HOSTS = {"terminal": "Terminal", "iterm2": "iTerm2"}    # 조상 프로세스 이름(소문자) → 앱 이름
+HOSTS = {"terminal": "Terminal", "iterm2": "iTerm2", "ghostty": "Ghostty"}    # 조상 프로세스 이름(소문자) → 앱 이름
 _TTY = re.compile(r"^/dev/[A-Za-z0-9]+$")
 JUMP_TIMEOUT_SEC = 15      # 첫 실행의 '자동화 허용' 대화상자에 답할 시간
 
@@ -58,6 +59,18 @@ end run""",
   end tell
   return "none"
 end run""",
+    "Ghostty": """on run argv
+  tell application "Ghostty"
+    repeat with t in terminals
+      if tty of t is (item 1 of argv) then
+        focus t
+        activate
+        return "ok"
+      end if
+    end repeat
+  end tell
+  return "none"
+end run""",
 }
 
 _OPEN = {
@@ -74,11 +87,24 @@ end run""",
     tell current session of w to write text (item 1 of argv)
   end tell
 end run""",
+    # Ghostty: 열린 창이 있으면 그 창의 새 탭, 없으면 새 창. 명령은 셸이 뜬 뒤 입력으로 넣는다.
+    "Ghostty": """on run argv
+  tell application "Ghostty"
+    activate
+    set cfg to new surface configuration
+    set initial input of cfg to (item 1 of argv) & linefeed
+    if (count of windows) > 0 then
+      new tab in front window with configuration cfg
+    else
+      new window with configuration cfg
+    end if
+  end tell
+end run""",
 }
 
 
 def host_of(pid):
-    """claude pid → `(앱 이름, tty)`. 조상 중 Terminal·iTerm2가 없거나 tty가 없으면 None."""
+    """claude pid → `(앱 이름, tty)`. 조상 중 Terminal·iTerm2·Ghostty가 없거나 tty가 없으면 None."""
     try:
         proc = psutil.Process(int(pid))
         tty = proc.terminal()
@@ -119,7 +145,7 @@ def shell_line(project_dir, body=None):
 
 
 def open_terminal(project_dir, body, env):
-    """config.MAC_TERMINAL 앱의 새 창에서 `cd <폴더> && <본문>`. 기다리지 않는다."""
+    """config.MAC_TERMINAL 앱의 새 창(Ghostty는 새 탭)에서 `cd <폴더> && <본문>`. 기다리지 않는다."""
     app = config.MAC_TERMINAL if config.MAC_TERMINAL in _OPEN else "Terminal"
     subprocess.Popen(["osascript", "-e", _OPEN[app], shell_line(project_dir, body)], env=env,
                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, close_fds=True)
