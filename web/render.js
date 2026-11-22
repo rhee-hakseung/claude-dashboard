@@ -30,7 +30,8 @@
   }
 
   const dot = (it) => `<span class="dot ${it.hl ? "hl" : it.kind === "ended" ? "ENDED" : it.state}"></span>`;
-  const agent = (it) => it.agent === "codex" ? '<span class="agent" title="Codex 세션">Codex</span>' : "";
+  const agent = (it) => it.agent === "codex" ? `<span class="agent codex" title="Codex 세션">${icon("codex")}</span>`
+    : `<span class="agent claude" title="Claude Code 세션">${icon("claude")}</span>`;
   const star = (it) => `<button class="icon-btn hover ${it.fav ? "on" : ""}" data-act="fav" data-sid="${esc(it.id)}"
       title="${it.fav ? "즐겨찾기에서 빼기" : "즐겨찾기에 추가"}">${icon("star")}</button>`;
 
@@ -150,7 +151,7 @@
 
   function favs(view) {
     const items = view.favorites.map((it) => `<div class="fav" draggable="true" data-sid="${esc(it.id)}" data-fav="1">
-      ${dot(it)}<div class="fav-main"><div class="fav-title" title="${esc(it.title)}">${esc(it.title)}</div>
+      ${dot(it)}${agent(it)}<div class="fav-main"><div class="fav-title" title="${esc(it.title)}">${esc(it.title)}</div>
       <div class="fav-sub">${esc(it.project)} · ${it.kind === "live" ? esc(it.label) : `<span data-mtime="${it.mtime}">${ageOf(it.mtime)}</span>`}</div></div>
       ${mainButton(it)}<button class="icon-btn" data-act="unfav" data-sid="${esc(it.id)}" title="즐겨찾기에서 빼기">${icon("x")}</button></div>`);
     return `<div class="section-head">${icon("star")}즐겨찾기<span class="count">${items.length || ""}</span>

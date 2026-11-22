@@ -23,6 +23,9 @@
     bell: '<path d="M4 11V7.5a4 4 0 0 1 8 0V11l1.2 1.5H2.8zM6.5 14h3"/>',
     spin: '<path d="M8 2.5a5.5 5.5 0 1 0 5.5 5.5"/><path d="M8 5.2A2.8 2.8 0 1 1 5.2 8" opacity=".5"/>',
     archive: '<path d="M2.5 3h11v3h-11zM3.5 6v6a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V6M6.5 8.8h3"/>',
+    // 세션 도구 표시(공식 로고가 아니라 직접 그린 표식): claude = 햇살 모양, codex = 프롬프트가 든 네모
+    claude: '<path d="M8 1.8v12.4M1.8 8h12.4M3.6 3.6l8.8 8.8M12.4 3.6l-8.8 8.8" stroke-width="1.7"/>',
+    codex: '<rect x="2" y="2.5" width="12" height="11" rx="2.5"/><path d="m5 6.2 2.2 1.8L5 9.8M8.8 10.2h2.4"/>',
     grid: '<rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="9" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="2.5" y="9" width="4.5" height="4.5" rx="1"/><rect x="9" y="9" width="4.5" height="4.5" rx="1"/>',
   };
   window.icon = (name) => `<svg class="i" viewBox="0 0 16 16" aria-hidden="true">${P[name] || ""}</svg>`;
