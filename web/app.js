@@ -65,6 +65,7 @@
     resume: (el) => call("resume", el.dataset.path),
     trash: (el) => call("trash", el.dataset.path),
     new: (el, name) => call("new_claude", name),
+    newcodex: (el, name) => call("new_codex", name),
     ps: (el, name) => call("powershell", name),
     exp: (el, name) => call("explorer", name),
     fold: (el, name) => call("fold", name, !el.closest(".card").classList.contains("folded")),

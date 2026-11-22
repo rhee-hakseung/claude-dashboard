@@ -17,6 +17,8 @@ from viewmodel import status_line, viewmodel
 def live_label(s):
     """탭 제목(/rename → ai-title)을 그대로 보인다. 아직 기본값("Claude Code")인 새 세션만
     레지스트리 name(자동 이름)으로 대신하고, 둘 다 없으면 sessionId 앞 8자."""
+    if s.agent == "codex":      # Codex의 탭 제목은 폴더 이름이라 세션 이름으로 쓸 수 없다
+        return s.name or "새 Codex 세션"
     if s.tab_title and s.tab_title != win_tabs.DEFAULT_TITLE:
         return s.tab_title
     return s.name or s.tab_title or s.session_id[:8]
@@ -31,7 +33,7 @@ def project_title(p, aliases):
 
 
 def _live(s, hl, favs):
-    return {"kind": "live", "id": s.session_id, "title": live_label(s), "state": s.state,
+    return {"kind": "live", "id": s.session_id, "title": live_label(s), "state": s.state, "agent": s.agent,
             "label": config.LABELS.get(s.state, s.state), "shell": s.shell_tag,
             "disagree": s.sources_disagree, "hl": hl.is_on(s.session_id),
             "jumpable": s.jumpable or s.background, "host": "bg" if s.background else
@@ -42,7 +44,8 @@ def _live(s, hl, favs):
 def _ended(e, hl, favs, now):
     resuming = hl.is_resuming(e.session_id, now)
     return {"kind": "ended", "id": e.session_id, "path": e.path, "title": e.title,
-            "mtime": e.mtime, "stub": e.is_stub, "dup": e.duplicate_of_newer,
+            "mtime": e.mtime, "stub": e.is_stub, "dup": e.duplicate_of_newer, "agent": e.agent,
+            "trashable": e.agent == "claude",
             "resuming": resuming, "fav": e.session_id in favs and not e.duplicate_of_newer,
             "resumable": bool(not resuming and not e.is_stub and not e.duplicate_of_newer
                               and e.resume_dir)}
@@ -85,4 +88,4 @@ def build(snap, prefs, hl, stats, now, message="", msg_seq=0):
                     "projects": sum(1 for p in projects if p["name"] != paths.ROOT_KEY)},
         "status": status_line(snap, "", stale), "message": message, "msg_seq": msg_seq,
         "theme": prefs.theme, "root": config.DEV_ROOT,
-        "labels": {"shell": config.SHELL_LABEL, "files": config.FILES_LABEL}}
+        "labels": {"shell": config.SHELL_LABEL, "files": config.FILES_LABEL, "codex": config.HAS_CODEX}}

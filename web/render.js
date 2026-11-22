@@ -30,6 +30,7 @@
   }
 
   const dot = (it) => `<span class="dot ${it.hl ? "hl" : it.kind === "ended" ? "ENDED" : it.state}"></span>`;
+  const agent = (it) => it.agent === "codex" ? '<span class="agent" title="Codex 세션">Codex</span>' : "";
   const star = (it) => `<button class="icon-btn hover ${it.fav ? "on" : ""}" data-act="fav" data-sid="${esc(it.id)}"
       title="${it.fav ? "즐겨찾기에서 빼기" : "즐겨찾기에 추가"}">${icon("star")}</button>`;
 
@@ -47,7 +48,7 @@
 
   function liveRow(it, q) {
     return `<div class="row live ${it.hl ? "hl" : ""}" draggable="true" data-sid="${esc(it.id)}">
-      ${dot(it)}<span class="row-title" title="${esc(it.title)}">${hi(it.title, q)}</span>
+      ${dot(it)}${agent(it)}<span class="row-title" title="${esc(it.title)}">${hi(it.title, q)}</span>
       ${it.shell ? '<span class="row-note">+ 백그라운드 실행 중</span>' : ""}
       ${it.host === "orphan" ? '<span class="row-note">창 닫힘</span>' : ""}
       ${it.disagree ? '<span class="row-note" title="상태 출처 불일치">?</span>' : ""}
@@ -58,11 +59,11 @@
     const notes = [it.stub && "빈 기록", it.dup && "다른 프로젝트에 같은 기록 있음", it.resuming && "재개 중…"].filter(Boolean);
     const plain = !it.stub && !it.dup;
     return `<div class="row ended ${it.stub ? "stub" : ""}" ${plain ? 'draggable="true"' : ""} data-sid="${esc(it.id)}">
-      ${dot(it)}<span class="row-title" title="${esc(it.title)}">${hi(it.title, q)}</span>
+      ${dot(it)}${agent(it)}<span class="row-title" title="${esc(it.title)}">${hi(it.title, q)}</span>
       ${notes.map((n) => `<span class="row-note">${n}</span>`).join("")}
       <span class="row-age" data-mtime="${it.mtime}">${ageOf(it.mtime)}</span>
-      ${it.resuming ? "" : (plain ? star(it) : "") + `<button class="icon-btn hover danger" data-act="trash"
-        data-path="${esc(it.path)}" title="휴지통으로 보내기">${icon("trash")}</button>` + mainButton(it)}</div>`;
+      ${it.resuming ? "" : (plain ? star(it) : "") + (it.trashable === false ? "" : `<button class="icon-btn hover danger" data-act="trash"
+        data-path="${esc(it.path)}" title="휴지통으로 보내기">${icon("trash")}</button>`) + mainButton(it)}</div>`;
   }
 
   /** 필터·검색을 적용한 카드 한 장의 보이는 줄들. `show`가 false면 카드를 통째로 숨긴다. */
@@ -128,6 +129,7 @@
         + p.jobs.map((j) => `<div class="job">${esc(j)}</div>`).join("");
       body = meta(p) + `<div class="card-actions">
         <button class="btn primary" data-act="new">${icon("plus")}새 claude</button>
+        ${R.labels.codex ? `<button class="btn" data-act="newcodex">${icon("plus")}새 codex</button>` : ""}
         <button class="btn" data-act="ps">${icon("terminal")}${esc(R.labels.shell)}</button>
         <button class="btn" data-act="exp">${icon("folder")}${esc(R.labels.files)}</button>${spark((p.stats || {}).spark)}</div>`
         + (rows ? `<div class="rows">${rows}</div>` : "");

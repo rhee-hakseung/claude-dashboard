@@ -36,6 +36,7 @@ class LiveSession:
     desktop: bool = False       # Claude 데스크톱 앱 안의 세션(entrypoint) — [점프] = 앱을 앞으로
     orphan: bool = False        # 창이 닫혔는데 프로세스만 남은 세션 — [이어 열기] = 새 탭에서 --resume
     tab_title: str = "Claude Code"   # WT 탭 제목(custom-title → ai-title → 기본값). win_tabs가 쓴다
+    agent: str = "claude"       # "claude" | "codex" — [점프]·[이어 열기]가 도구에 맞는 명령을 고른다
 
 
 @dataclass(slots=True)
@@ -50,6 +51,8 @@ class EndedSession:
     is_stub: bool = False
     resume_dir: str | None = None
     duplicate_of_newer: bool = False
+    agent: str = "claude"       # "claude" | "codex". codex면 path는 파일이 아니라 "codex:<id>"다
+    activity_path: str | None = None   # 활동 막대가 읽을 파일(없으면 path). codex는 rollout 파일
 
 
 @dataclass(slots=True)

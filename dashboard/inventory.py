@@ -113,7 +113,7 @@ def list_ended(projects: list[str], live_ids: set[str],
             hit = cache.get(path) if cache is not None else None
             info = hit[1] if hit and hit[0] == key else _inspect(path, st.st_size)
             cwds = [c for c in info["cwds"] if isinstance(c, str) and c]   # 오염된 cwd는 후보에서만 제외
-            project = paths.attribute_slug(folder_slug, projects, dev_root)
+            project = paths.attribute_ended(folder_slug, cwds, projects, dev_root)
             row = EndedSession(
                 slug=folder_slug, session_id=sid, path=path, project=project,
                 mtime=st.st_mtime, size=st.st_size,

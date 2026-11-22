@@ -8,6 +8,7 @@
 PowerShell 5.1에는 '&&'·'??'·삼항이 없으므로 본문에 쓰지 않는다.
 """
 import os
+import re
 import subprocess
 import uuid
 
@@ -22,6 +23,7 @@ _host = None      # "wt" | "conhost". 모드 문자열일 뿐 hwnd가 아니므�
 _wt_path = None
 # wt -w 0 = 가장 최근에 쓴 Windows Terminal 창에 탭으로 연다. 열린 창이 없으면 wt가 새 창을 만든다.
 WT_WINDOW = "0"
+_UUID = re.compile(r"^[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}$")
 
 
 class LaunchFailed(OSError):
@@ -93,9 +95,19 @@ def _open(project_dir, body):
         raise LaunchFailed("실행 실패: %s" % exc) from exc
 
 
-def open_resume(project_dir, session_id):
-    """[재개]. 부팅 동안 그 sessionId는 아직 라이브가 아니다 — 호출자는 강제 갱신하지 말 것."""
+def open_resume(project_dir, session_id, agent="claude"):
+    """[재개]. 부팅 동안 그 sessionId는 아직 라이브가 아니다 — 호출자는 강제 갱신하지 말 것.
+    Codex는 `codex resume <id>`다. id는 명령줄에 그대로 들어가므로 UUID 꼴이 아니면 띄우지 않는다."""
+    if agent == "codex":
+        if not _UUID.match(session_id or ""):
+            raise LaunchFailed(config.LABELS["no_codex_id"])
+        return _open(project_dir, "%s resume %s" % (config.CODEX_CMD, session_id))
     _open(project_dir, "%s --resume %s" % (config.CLAUDE_CMD, session_id))
+
+
+def open_new_codex(project_dir):
+    """[새 codex]. Codex는 id를 밖에서 정해 줄 수 없다 — 뜬 뒤 프로세스로 알아본다(codex.py)."""
+    _open(project_dir, config.CODEX_CMD)
 
 
 def open_attach(project_dir, session_id):

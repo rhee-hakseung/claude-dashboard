@@ -65,6 +65,27 @@ def attribute_slug(folder_slug: str, projects: list[str],
     return best
 
 
+def attribute_ended(folder_slug: str, cwds, projects: list[str],
+                    dev_root: str = config.DEV_ROOT) -> str | None:
+    """끝난 기록의 귀속. 슬러그는 한글 같은 비ASCII 글자를 전부 `-`로 뭉개므로 `실험기록`와
+    `논문정리`이 같은 슬러그가 된다(2026-11-22 실측: 남의 프로젝트에 붙었다) → 기록 속 cwd가 가리키는
+    프로젝트가 **지금도 있고 그 슬러그가 폴더 슬러그와 맞으면** 그쪽으로 정한다. 폴더를 옮겨 cwd가
+    옛 경로가 된 기록은 맞지 않으므로 예전처럼 슬러그 대조(attribute_slug)로 간다."""
+    fs, root = folder_slug.lower(), _norm(dev_root)
+    for c in cwds or ():
+        p = attribute_cwd(c, dev_root)
+        if p is None or p not in projects:
+            continue
+        if p == ROOT_KEY:
+            if fs == slug(root).lower():
+                return p
+            continue
+        s = slug(os.path.join(root, p)).lower()
+        if fs == s or fs.startswith(s + "-"):
+            return p
+    return attribute_slug(folder_slug, projects, dev_root)
+
+
 def resume_dir(folder_slug: str, cwd_candidates: list[str],
                project_dir: str | None) -> str | None:
     """[재개] 실행 폴더: cwd 후보(꼬리의 마지막 → 머리의 첫) 중 슬러그가 폴더와 같은 첫 값,

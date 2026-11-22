@@ -95,7 +95,7 @@ def transcripts_by_project(snap) -> dict:
             out.setdefault(s.project, []).append(s.transcript_path)
     for e in snap.ended:
         if e.project and not e.duplicate_of_newer:
-            out.setdefault(e.project, []).append(e.path)
+            out.setdefault(e.project, []).append(e.activity_path or e.path)
     return {k: list(dict.fromkeys(v)) for k, v in out.items()}
 
 

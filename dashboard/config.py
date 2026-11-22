@@ -24,6 +24,8 @@ OWN_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # 설치
 CLAUDE_HOME = os.path.join(_HOME, ".claude")
 SESSIONS_DIR = os.path.join(CLAUDE_HOME, "sessions")   # 라이브 레지스트리 <pid>.json (읽기 전용)
 PROJECTS_DIR = os.path.join(CLAUDE_HOME, "projects")   # transcript <slug>\<sessionId>.jsonl
+CODEX_HOME = _env("CODEX_HOME", os.path.join(_HOME, ".codex"))   # Codex 세션 기록(읽기 전용)
+HAS_CODEX = os.path.isdir(CODEX_HOME)                  # Codex를 쓰는 PC에서만 [새 codex] 버튼을 보인다
 STATE_DIR = os.path.join(_LOCALAPPDATA if IS_WIN else os.path.join(_HOME, "Library", "Application Support")
                          if IS_MAC else _env("XDG_STATE_HOME", os.path.join(_HOME, ".local", "state")),
                          "dev-dashboard")
@@ -89,6 +91,7 @@ SHELL_NAMES = {"powershell.exe", "pwsh.exe", "cmd.exe", "conhost.exe", "wt.exe",
                # WSL 다리 프로세스: Claude의 Bash 도구가 `wsl -e bash -lc …`로 띄운다 — 작업이 아니다
                # (2026-10-12 사용자 요청으로 숨김)
                "wsl.exe", "wslhost.exe", "wslrelay.exe",
+               "codex.exe", "codex",      # Codex 세션 자신은 '작업'이 아니다(세션 줄로 따로 보인다)
                # macOS·리눅스: 셸·터미널·claude 자신
                "zsh", "bash", "sh", "fish", "login", "tmux", "screen", "terminal", "iterm2", "claude", "git"}
 NODE_NAMES = {"node.exe", "node"}
@@ -98,6 +101,8 @@ HELPER_EXE_DIRS = (
     os.sep + "node_modules" + os.sep,
     os.path.join(_APPDATA, "npm") + os.sep,
     os.path.join(_LOCALAPPDATA, "AnthropicClaude") + os.sep,
+    CODEX_HOME + os.sep,                                   # Codex가 띄우는 도구 프로세스(node_repl 등)
+    os.path.join(_LOCALAPPDATA, "OpenAI", "Codex") + os.sep,
     # Git Bash 유틸(grep/tail/sleep …)은 Claude 도구 프로세스다 — 2026-09-22 사용자 결정으로 helper 처리
     os.path.join(_env("ProgramFiles", r"C:\Program Files"), "Git", "usr", "bin") + os.sep,
 )
@@ -113,6 +118,7 @@ POWERSHELL_EXE = os.path.join(_env("SystemRoot", r"C:\Windows"),
                               "System32", "WindowsPowerShell", "v1.0", "powershell.exe")
 EXPLORER_EXE = os.path.join(_env("SystemRoot", r"C:\Windows"), "explorer.exe")
 CLAUDE_CMD = "claude"          # 새 셸의 PATH로 해소한다(사용자 셸과 같은 claude)
+CODEX_CMD = "codex"
 MAC_TERMINAL = _saved("terminal") or "Terminal"   # 맥에서 새 창을 열 앱: "Terminal" | "iTerm2" | "Ghostty"
 RESUMING_CAP_SEC = 120         # [재개] 마크 상한: 레지스트리에 안 나타나면 이 뒤 '끝남'으로 복귀
 JUMP_POSTCHECK_MS = 200        # [점프] 사후 확인 지연
@@ -130,8 +136,10 @@ LABELS = {
     "new_claude": "새 claude", "powershell": SHELL_LABEL, "explorer": FILES_LABEL,
     "no_folder": "폴더가 없습니다: %s", "alias_save_failed": "이름 저장 실패: %s",
     "grip": "≡", "attach": "열기",
+    "codex_trash": "Codex 기록은 대시보드에서 지우지 않습니다 — Codex에서 정리하세요(codex archive <이름>)",
     "no_window": "창을 찾을 수 없습니다", "order_save_failed": "순서 저장 실패: %s",
     "orphan_jump": "'%s' — 창이 닫힌 세션을 " + SHELL_LABEL + " 새 탭에서 이어 엽니다",
+    "no_codex_id": "이 Codex 세션은 아직 기록이 없어 이어 열 수 없습니다",
     "desktop_jump": "'%s' — Claude 앱의 세션을 " + SHELL_LABEL + "에서 이어 엽니다(앱 쪽은 앱에서 닫으세요)",
 }
 # Claude 데스크톱 앱 안에서 돈 세션: 레지스트리 entrypoint로 알아본다. 앱 창은 트레이로 숨어 pid로 찾을 수

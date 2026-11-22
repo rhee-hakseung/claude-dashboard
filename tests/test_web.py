@@ -139,7 +139,7 @@ def test_api_trash_hides_the_row_at_once_and_reports_refusals(state, monkeypatch
 def test_api_resume_marks_the_row_and_skips_duplicates(state, monkeypatch):
     hub = hub_with(snap(ended=[ended(), ended("E2", duplicate_of_newer=True)]))
     calls = []
-    monkeypatch.setattr(web_api.launch, "open_resume", lambda d, sid: calls.append((d, sid)))
+    monkeypatch.setattr(web_api.launch, "open_resume", lambda d, sid, agent="claude": calls.append((d, sid)))
     api = web_api.Api(hub)
     api.resume("p\\E2.jsonl")
     api.resume("p\\E1.jsonl")

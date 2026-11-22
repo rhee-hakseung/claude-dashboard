@@ -10,6 +10,7 @@ import logging
 import threading
 import time
 
+import codex
 import collect_fs
 import config
 import inventory
@@ -49,13 +50,34 @@ class Store:
             return self.snap.copy()
 
 
+def _codex_live(memo):
+    """Codex 쪽 수집이 터져도 Claude 쪽은 그대로 나간다. 실패한 틱은 직전 목록을 다시 쓴다(줄이 깜박이지 않게)."""
+    try:
+        memo["last"] = codex.live_sessions(memo)
+        return memo["last"], 0
+    except Exception:
+        log.exception("codex live")
+        return memo.get("last", []), 1
+
+
+def _codex_ended(live_ids):
+    try:
+        return codex.ended_sessions(live_ids), 0
+    except Exception:
+        log.exception("codex ended")
+        return [], 1
+
+
 def fast_loop(store, stop):
     """0.5 s 틱: 레지스트리 + 라이브 세션 꼬리(파일당 0.46 ms)."""
-    tracker, prev, tcache = status.VetoTracker(), {}, {}
+    tracker, prev, tcache, cx = status.VetoTracker(), {}, {}, {}
     while not stop.is_set():
         t0 = time.time()
         try:
             rows, rejected, failures = live._live(tracker, prev, tcache)
+            if config.HAS_CODEX:
+                more, bad = _codex_live(cx)
+                rows, failures = rows + more, failures + bad
             store.update("fast", failures, live=rows, rejected_registry=rejected,
                          disagreements=sum(1 for s in rows if s.sources_disagree))
         except Exception:
@@ -90,8 +112,11 @@ def slow_loop(store, stop):
                 store.update("slow", 0, projects=_activity(found, snap))
             if now >= due.get("ended", 0.0):
                 due["ended"] = now + config.TRANSCRIPTS_PERIOD_SEC
-                rows, fails = inventory.list_ended(
-                    names, {s.session_id for s in snap.live}, cache=ended_cache)
+                live_ids = {s.session_id for s in snap.live}
+                rows, fails = inventory.list_ended(names, live_ids, cache=ended_cache)
+                if config.HAS_CODEX:
+                    more, bad = _codex_ended(live_ids)
+                    rows, fails = sorted(rows + more, key=lambda r: -r.mtime), fails + bad
                 store.update("slow", fails, ended=rows)
             if now >= due.get("jobs", 0.0):
                 due["jobs"] = now + config.JOBS_PERIOD_SEC

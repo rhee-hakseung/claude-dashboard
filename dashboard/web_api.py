@@ -60,7 +60,7 @@ class Api:
         if s.background:        # 창이 없는 백그라운드 세션 — 새 탭에서 붙는다
             launch.open_attach(s.cwd, sid)
         elif s.desktop or s.orphan:   # Claude 앱 세션·창이 닫힌 세션 — 새 탭에서 이어 연다
-            launch.open_resume(s.cwd, sid)
+            launch.open_resume(s.cwd, sid, s.agent)
             hub.say(config.LABELS["orphan_jump" if s.orphan else "desktop_jump"] % web_view.live_label(s))
         else:
             ok, tab = term.jump(s.pid, s.tab_title)
@@ -81,7 +81,7 @@ class Api:
             return
         hub.hl.mark_resuming(e.session_id, time.time())
         try:
-            launch.open_resume(e.resume_dir, e.session_id)
+            launch.open_resume(e.resume_dir, e.session_id, e.agent)
         except OSError:
             hub.hl.clear_resuming(e.session_id)
             raise
@@ -90,6 +90,9 @@ class Api:
     def trash(self, path):
         hub, e = self._hub, self._hub.ended(path)
         if e is None or hub.hl.is_resuming(e.session_id, time.time()):
+            return
+        if e.agent != "claude":     # Codex 기록은 파일 하나가 아니다(DB + 기록) — 건드리지 않는다
+            hub.say(config.LABELS["codex_trash"])
             return
         trash.send(e.path)
         hub.trashed.add(e.path)
@@ -100,6 +103,12 @@ class Api:
         p = self._hub.project(name)
         if p is not None:
             self._hub.hl.mark_seen(launch.open_new_claude(p.path))
+
+    @_action
+    def new_codex(self, name):
+        p = self._hub.project(name)
+        if p is not None:
+            launch.open_new_codex(p.path)
 
     @_action
     def powershell(self, name):

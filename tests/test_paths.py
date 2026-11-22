@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 import config
@@ -97,3 +99,32 @@ def test_resume_dir_nested_search_gives_none_when_no_folder_matches(tmp_path):
     (tmp_path / "project").mkdir()
     fs = paths.slug(str(tmp_path / "project" / "gone"))
     assert paths.resume_dir(fs, [], str(tmp_path)) is None
+
+
+# ── 슬러그가 겹치는 폴더(한글 이름은 전부 `-`가 된다) ─────────────────────────
+KO = ["논문정리", "실험기록", "회의록모음"]
+
+
+def test_korean_names_collide_in_the_slug():
+    assert paths.slug(os.path.join(config.DEV_ROOT, "논문정리")) == paths.slug(os.path.join(config.DEV_ROOT, "실험기록"))
+
+
+def test_attr_ended_uses_the_recorded_cwd_to_break_a_slug_tie():
+    fs = paths.slug(os.path.join(config.DEV_ROOT, "실험기록"))
+    sub = os.path.join(config.DEV_ROOT, "실험기록", "하위 폴더")
+    assert paths.attribute_slug(fs, KO) == "논문정리"                 # 예전 동작: 먼저 나온 폴더
+    assert paths.attribute_ended(fs, [sub, os.path.join(config.DEV_ROOT, "실험기록")], KO) == "실험기록"
+    assert paths.attribute_ended(paths.slug(sub), [sub], KO) == "실험기록"   # 하위 폴더에서 켠 세션
+
+
+def test_attr_ended_ignores_a_cwd_that_does_not_fit_the_folder():
+    fs = paths.slug(os.path.join(config.DEV_ROOT, "beta"))
+    old = os.path.join(config.DEV_ROOT, "alpha")            # 다른 프로젝트에서 복사해 온 기록
+    assert paths.attribute_ended(fs, [old], ["alpha", "beta"]) == "beta"
+    assert paths.attribute_ended(fs, [os.path.join(config.DEV_ROOT, "gone")], ["alpha", "beta"]) == "beta"
+    assert paths.attribute_ended(fs, [], ["alpha", "beta"]) == "beta"
+    assert paths.attribute_ended(fs, [config.DEV_ROOT], ["alpha", "beta", ROOT_KEY]) == "beta"
+
+
+def test_attr_ended_root():
+    assert paths.attribute_ended(paths.slug(config.DEV_ROOT), [config.DEV_ROOT], ["alpha", ROOT_KEY]) == ROOT_KEY

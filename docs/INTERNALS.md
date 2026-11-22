@@ -123,6 +123,7 @@ Store 별칭 스텁이라 "Python was not found"로 조용히 실패한다. 런�
 | `web_hub.py` | 새 화면의 상태 — 수집 스레드 4개, 강조, 설정, 마지막 뷰(JSON)와 rev |
 | `web_view.py` | 스냅샷 → 화면에 보낼 뷰(dict) 조립(순수) |
 | `web_api.py` | 화면이 부르는 버튼 동작 — 점프/재개/휴지통/새 claude/순서/이름/접기/즐겨찾기/테마 |
+| `codex.py` | Codex 세션 수집(읽기 전용): `~/.codex/state_<n>.sqlite`의 thread 목록, 실행 중인 `codex` 프로세스 ↔ thread 짝짓기, 기록 꼬리의 `task_started`/`task_complete`로 상태 판정 |
 | `viewmodel.py` | 프로젝트별 묶기·상태줄·강조 적용(순수) |
 | `prefs.py` | `state.json` 읽기/병합 저장과 설정 묶음(별칭·순서·접힘·즐겨찾기·테마) |
 | `stats.py` | 프로젝트 현황 수집 스레드 — git 상태, 폴더 용량, 활동 막대 |
@@ -320,3 +321,25 @@ Claude Code는 창에서 쓰던 대화를 **백그라운드 세션**(레지스�
 - **창을 항상 위로 올리지 않고**(`-topmost` 없음), 소리도 토스트도 내지 않는다. 강조는 빨간 점
   ●(`나를 기다림` 글자 오른쪽, 접힌 프로젝트는 이름 오른쪽)뿐이다 — 배경색도, 순서도 바뀌지 않는다.
 - **대시보드를 닫아도 어떤 세션에도 영향이 없다.** 워커는 daemon 스레드다.
+
+## Codex 지원 (2026-11-22, codex-cli 0.171 실측)
+
+- Codex에는 Claude Code의 `sessions/<pid>.json` 같은 레지스트리가 없다. 살아 있는 세션은 **프로세스**로 찾는다:
+  이름이 `codex`이고 인자에 하위 명령(`app-server`·`exec-server`·`exec` 등)이 없는 것. 터미널의 `codex`는
+  화면만 맡고 대화는 `app-server` 데몬이 처리하지만, 폴더(cwd)와 창은 터미널 쪽 프로세스에 있다.
+- thread id는 UUIDv7이고 그 안의 시각이 프로세스 시작 시각과 같은 초다. `thread-writer-locks/<id>.lock`은
+  세션이 뜨는 순간 생기므로(DB의 `threads` 줄은 첫 메시지 뒤에 생긴다) 이름만 보고 id를 먼저 안다.
+- 기록(rollout)은 `sessions/YYYY/MM/DD/rollout-…-<id>.jsonl`이고 오래되면 `.zst`로 압축된다. 한 줄이 수 MB일 수
+  있다(사진). 상태는 꼬리에서 `"type":"event_msg","payload":{"type":"task_started|task_complete|turn_aborted"`의
+  마지막 것으로 정한다. 기록을 못 읽으면 `thread_history_<n>.sqlite`의 마지막 turn(`completed_at`이 비었는가).
+- Windows Terminal 탭 제목은 폴더 이름이다(대기 중 실측). 작업 중에 제목이 바뀌는지는 확인하지 못했다.
+- 끝난 세션 목록은 `threads` 표에서 `archived = 0`이고 cwd가 프로젝트 폴더 안인 것. `EndedSession.path`에는
+  파일 경로 대신 `codex:<id>`를 넣는다 — 휴지통 가드(①)가 파일이 아닌 값을 거절하므로 지워질 수 없다.
+- **확인하지 못한 것**: 터미널에서 만든 thread가 `threads` 표에 `source`가 무엇으로 들어가는지, 작업 중인 동안의
+  기록 갱신 시점(실제로 메시지를 보낸 세션이 관측 시간 안에 없었다). 맥에서의 동작.
+
+## 슬러그가 겹치는 폴더 (2026-11-22)
+
+Claude Code는 기록 폴더 이름을 만들 때 영숫자가 아닌 글자를 전부 `-`로 바꾼다. 한글 폴더 이름은 글자 수만 남으므로
+네 글자짜리 두 폴더가 같은 슬러그가 된다. 끝난 기록은 `paths.attribute_ended`가 기록 속 cwd(꼬리의 마지막 → 머리의 첫)로
+먼저 가리고, cwd가 가리키는 프로젝트가 없거나 슬러그와 맞지 않을 때만 예전의 슬러그 대조로 간다.
