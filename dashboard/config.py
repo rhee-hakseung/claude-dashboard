@@ -122,6 +122,7 @@ CODEX_CMD = "codex"
 MAC_TERMINAL = _saved("terminal") or "Terminal"   # 맥에서 새 창을 열 앱: "Terminal" | "iTerm2" | "Ghostty"
 RESUMING_CAP_SEC = 120         # [재개] 마크 상한: 레지스트리에 안 나타나면 이 뒤 '끝남'으로 복귀
 JUMP_POSTCHECK_MS = 200        # [점프] 사후 확인 지연
+TAB_CHECK_SECONDS = 4.0        # 세션의 탭이 아직 있는지 다시 보는 간격(탭 열거 ≈35 ms)
 
 # ── 휴지통 ──────────────────────────────────────────────────────────────────
 TRASH_MIN_AGE_SEC = 5          # mtime 나이가 이보다 어리면 거절(아직 append 중일 수 있음)

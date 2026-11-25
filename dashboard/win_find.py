@@ -78,6 +78,20 @@ def _host_hwnd(shell_pid):
     return owner
 
 
+def console_count(host_hwnd) -> int:
+    """이 호스트 창에 딸린 콘솔(탭·칸) 수 = 소유자가 이 창인 `PseudoConsoleWindow`의 수."""
+    n = 0
+
+    def cb(h, _l):
+        nonlocal n
+        if _class_of(h) == _PSEUDO and int(_u32.GetWindow(h, GW_OWNER) or 0) == host_hwnd:
+            n += 1
+        return True
+
+    _u32.EnumWindows(_ENUMPROC(cb), 0)
+    return n
+
+
 def hwnd_for_pid(claude_pid):
     """claude pid → 부모 셸 pid → 호스트 창. 못 찾으면 한 단계만 더 거슬러 오른다
     (claude가 런처에 감싸인 경우). 상승은 2단계에서 멈춘다. 어떤 오류든 None."""

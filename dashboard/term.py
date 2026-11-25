@@ -13,9 +13,19 @@ import config
 if config.IS_WIN:
     import win_find
     import win_focus
+    import win_tabs
 
     def can_jump(pid) -> bool:
         return win_find.hwnd_for_pid(pid) is not None
+
+    def tab_closed(pid, tab_title) -> bool:
+        """창은 있는데 이 세션의 탭만 없는가(≈35 ms — 호출자가 간격을 둔다). 어떤 오류든 False."""
+        try:
+            hwnd = win_find.hwnd_for_pid(pid)
+            return bool(hwnd) and win_tabs.tab_missing(
+                win_tabs.tab_names(hwnd), tab_title, win_find.console_count(hwnd))
+        except Exception:
+            return False
 
     def jump(pid, tab_title=None):
         """→ `(창을 올렸는가, 탭 결과 문자열)`. 탭 결과는 config.JUMP_TAB_MESSAGES의 키."""
@@ -33,6 +43,9 @@ elif config.IS_MAC:
 
     can_jump = mac_term.can_jump
 
+    def tab_closed(pid, tab_title) -> bool:
+        return False     # 맥은 탭을 tty로 찾는다 — 탭이 없으면 can_jump가 이미 False다
+
     def jump(pid, tab_title=None):
         return mac_term.jump(pid), ""
 
@@ -44,6 +57,9 @@ elif config.IS_MAC:
 
 else:
     def can_jump(pid) -> bool:
+        return False
+
+    def tab_closed(pid, tab_title) -> bool:
         return False
 
     def jump(pid, tab_title=None):

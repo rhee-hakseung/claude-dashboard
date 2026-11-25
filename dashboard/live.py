@@ -18,6 +18,7 @@ import win_tabs
 from model import WORKING, LiveSession
 
 _NO_TAIL = (None, win_tabs.DEFAULT_TITLE)
+_tabless = {}   # pid → (다음 검사 시각, 연속으로 '탭 없음'이 나온 횟수). hwnd는 담지 않는다(SI-7)
 
 
 def _tail(path, cache):
@@ -47,6 +48,16 @@ def _tab_title(path):
                                        + list(tail.iter_head_records(path)))
     except (OSError, UnicodeError, ValueError):
         return win_tabs.DEFAULT_TITLE
+
+
+def _tab_closed(pid, title, now):
+    """창은 있는데 탭만 닫힌 세션인가. 탭 열거가 느려(≈35 ms) `TAB_CHECK_SECONDS`마다 한 번만 보고,
+    **두 번 연속** 없을 때만 그렇다고 한다 — 제목이 바뀌는 순간의 어긋남에 속지 않게."""
+    due, streak = _tabless.get(pid, (0.0, 0))
+    if now >= due:
+        streak = streak + 1 if term.tab_closed(pid, title) else 0
+        _tabless[pid] = (now + config.TAB_CHECK_SECONDS, streak)
+    return streak >= 2
 
 
 def _merge_parked(out, regs):
@@ -111,6 +122,9 @@ def _live(tracker, prev, tcache):
         jump = desktop or term.can_jump(pid)
         # 창을 닫았는데 프로세스만 남은 세션: 창도 없고 띄운 셸도 없다 → 새 탭에서 이어 열게 한다
         orphan = not jump and not bg and term.launcher_gone(pid)
+        # 탭만 닫히고 셸·창은 남은 세션도 같은 처지다 — [점프]는 창만 올리고 끝난다
+        if jump and not desktop and not bg and _tab_closed(pid, tab_title, now):
+            jump, orphan = False, True
         # [점프] 가능 여부는 여기서 미리 판정한다 — 세션당 ≈6 ms(psutil 조상 2단 + EnumWindows
         # 1회)라 렌더 경로에서는 부를 수 없다. 남기는 것은 불리언뿐이고 hwnd는 버린다(SI-7).
         out.append(LiveSession(
@@ -125,6 +139,8 @@ def _live(tracker, prev, tcache):
     for k in [k for k in prev if k not in keys]:
         prev.pop(k, None)
         tracker.forget(k)
+    for p in [p for p in _tabless if p not in {s.pid for s in out}]:
+        _tabless.pop(p, None)
     for p in [p for p in tcache if p not in live_paths]:   # 살아있지 않은 경로는 버린다
         tcache.pop(p, None)
     return out, rejected, failures

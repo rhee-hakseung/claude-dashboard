@@ -13,12 +13,13 @@ comtypes는 함수 안에서 늦게 임포트한다 — 없어도 나머지 앱�
 from __future__ import annotations
 
 import os
+import threading
 
 import config
 
 DEFAULT_TITLE = "Claude Code"   # 기록이 아직 제목을 못 정한 새 세션의 탭 제목
 
-_uia = None   # (IUIAutomation, UIAutomationClient 모듈). COM 객체이지 hwnd가 아니다(SI-7 무관).
+_local = threading.local()   # 스레드마다 (IUIAutomation, 모듈) 하나. COM 객체이지 hwnd가 아니다(SI-7 무관).
 
 
 def expected_title(records_newest_first) -> str:
@@ -63,18 +64,23 @@ def _gen_dir():
 
 
 def _automation():
-    """`(IUIAutomation, UIAutomationClient)`를 1회만 만들어 재사용한다.
-    `CoInitialize`는 comtypes가 임포트 시점에 대신 해 준다. **UI 스레드에서만** 부른다."""
-    global _uia
-    if _uia is None:
+    """`(IUIAutomation, UIAutomationClient)`를 **스레드마다** 1회 만들어 재사용한다.
+    [점프](점프 스레드)와 탭 유무 검사(수집 스레드)가 따로 부르므로 COM 객체를 스레드 사이에
+    돌려쓰지 않는다. comtypes는 임포트한 스레드만 초기화해 주므로 여기서 스레드별로 한 번 더 한다."""
+    uia = getattr(_local, "uia", None)
+    if uia is None:
         import comtypes.client
+        try:
+            comtypes.CoInitialize()
+        except OSError:
+            pass                      # 이미 다른 방식으로 초기화된 스레드 — 그대로 쓴다
         gen = _gen_dir()
         if gen:
             comtypes.client.gen_dir = gen
         comtypes.client.GetModule("UIAutomationCore.dll")
         from comtypes.gen import UIAutomationClient as mod
-        _uia = (comtypes.client.CreateObject(mod.CUIAutomation, interface=mod.IUIAutomation), mod)
-    return _uia
+        uia = _local.uia = (comtypes.client.CreateObject(mod.CUIAutomation, interface=mod.IUIAutomation), mod)
+    return uia
 
 
 def _tabs(host_hwnd):
@@ -99,6 +105,18 @@ def tab_names(host_hwnd) -> list[tuple[str, bool]]:
         return [(name, sel) for name, sel, _pat in _tabs(host_hwnd)]
     except Exception:
         return []
+
+
+def tab_missing(names, title, consoles) -> bool:
+    """이 제목의 탭이 닫혔다고 볼 수 있는가. 순수 함수.
+
+    탭을 닫았는데 셸과 claude가 그대로 남는 일이 있다(2026-11-25 실측: 콘솔 4개, 탭 3개).
+    이때 호스트 창은 여전히 찾아지므로 [점프]는 창만 올리고 끝난다. 조건 둘을 모두 요구한다:
+    제목이 맞는 탭이 없고, **콘솔 수가 탭 수보다 많다**. 뒤 조건이 없으면 제목이 잠깐 어긋난
+    멀쩡한 세션까지 닫힌 것으로 본다. 탭을 못 셌으면(UIA 실패) 판단하지 않는다.
+    한계: 탭 하나를 여러 칸으로 나눠 쓰면 콘솔이 탭보다 많아져 가려진 칸을 닫힌 것으로 볼 수 있다.
+    """
+    return bool(names) and consoles > len(names) and not any(_matches(n, title) for n, _sel in names)
 
 
 def select_tab(host_hwnd, title) -> str:

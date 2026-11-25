@@ -26,6 +26,7 @@ def patch(monkeypatch, regs, paths_by_sid, calls):
     monkeypatch.setattr(live.collect_fs, "procstart_to_unix", lambda s: NOW)
     monkeypatch.setattr(live.term, "can_jump", lambda pid: False)
     monkeypatch.setattr(live.term, "launcher_gone", lambda pid: False)
+    monkeypatch.setattr(live.term, "tab_closed", lambda pid, title: False)
 
     def counted(path):
         calls.append(path)
@@ -192,3 +193,27 @@ def test_reopened_conversation_prefers_the_process_that_still_has_a_window(monke
 def test_launcher_gone_is_false_for_a_process_with_a_live_parent():
     assert live.term.launcher_gone(os.getpid()) is False
     assert live.term.launcher_gone(2 ** 30) is False                   # 없는 pid — 판단하지 않는다
+
+
+def test_a_session_whose_tab_is_gone_becomes_an_orphan_after_two_checks(monkeypatch):
+    """창은 찾아지는데 탭만 없는 세션: 두 번 연속 확인되면 orphan([이어 열기])이 된다."""
+    patch(monkeypatch, [reg("s1", 1)], {}, [])
+    monkeypatch.setattr(live.term, "can_jump", lambda pid: True)
+    monkeypatch.setattr(live.term, "tab_closed", lambda pid, title: True)
+    monkeypatch.setattr(live.config, "TAB_CHECK_SECONDS", 0.0)
+    live._tabless.clear()
+    first = _sessions(live._live(status.VetoTracker(), {}, {}))[0]
+    second = _sessions(live._live(status.VetoTracker(), {}, {}))[0]
+    assert (first.orphan, first.jumpable) == (False, True)
+    assert (second.orphan, second.jumpable) == (True, True)
+    monkeypatch.setattr(live.term, "tab_closed", lambda pid, title: False)
+    assert _sessions(live._live(status.VetoTracker(), {}, {}))[0].orphan is False
+
+
+def test_tab_missing_needs_both_a_missing_title_and_more_consoles_than_tabs():
+    from win_tabs import tab_missing
+    names = [("◑ alpha", True), ("✳ beta", False)]
+    assert tab_missing(names, "gamma", 3) is True
+    assert tab_missing(names, "gamma", 2) is False      # 콘솔 수 = 탭 수: 제목만 잠깐 어긋난 것
+    assert tab_missing(names, "beta", 3) is False
+    assert tab_missing([], "gamma", 3) is False         # 탭을 못 셌다 — 판단하지 않는다
