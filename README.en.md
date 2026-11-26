@@ -5,6 +5,10 @@
 A desktop app that shows every [Claude Code](https://claude.com/claude-code) session you are running across your projects on one screen. It shows [Codex](https://developers.openai.com/codex/cli) sessions too.
 You can see at a glance which sessions are **working** and which are **waiting for you**, and jump to the right terminal tab with one button.
 
+![Claude dashboard screenshot](docs/screenshot.png)
+
+*Project and session names in the picture are sample data.*
+
 - Runs on Windows and macOS.
 - It only **observes** sessions. It never ends a process and never changes Claude Code's settings or your conversations.
 - No server and no account. It runs entirely on your machine and sends nothing out.
