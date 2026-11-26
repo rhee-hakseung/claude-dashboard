@@ -1,5 +1,7 @@
 # Claude dashboard
 
+**한국어** | [English](README.en.md)
+
 여러 프로젝트에서 동시에 돌리는 [Claude Code](https://claude.com/claude-code) 세션을 한 화면에서 보는 데스크톱 앱입니다. [Codex](https://developers.openai.com/codex/cli) 세션도 같이 보여 줍니다.
 어느 세션이 **작업 중**이고 어느 세션이 **나를 기다리는지** 바로 보이고, 버튼 하나로 그 터미널 탭으로 건너갑니다.
 
